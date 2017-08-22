@@ -31,5 +31,5 @@
  * where you might go straight from local 'make' to 'make install'
  * without going through Buildscr.
  */
-#define SOURCE_COMMIT "putty-0.70cn"
+#define SOURCE_COMMIT "portable-putty-0.70cn"
 #endif
