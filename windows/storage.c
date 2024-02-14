@@ -74,7 +74,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
         errorCode = GetLastError();
         ltoa(errorCode, pcBuf, 10);
 
-        strcpy(pcMessage, "Error: ");
+        strcpy(pcMessage, "错误: ");
         strcat(pcMessage, pcErrText);
         strcat(pcMessage, "\n");
 
@@ -82,14 +82,14 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
                 strcat(pcMessage, pcErrParam);
                 strcat(pcMessage, "\n");
         }
-        strcat(pcMessage, "Error code: ");
+        strcat(pcMessage, "错误代码: ");
         strcat(pcMessage, pcBuf);
 
         /* JK: get parent-window and show */
         hwRParent = GetActiveWindow();
         if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent);}
 
-        if (MessageBox(hwRParent, pcMessage, "Error", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+        if (MessageBox(hwRParent, pcMessage, "错误", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
                 /* JK: this is really bad -> just ignore */
                 return 0;
         }
@@ -160,7 +160,7 @@ char* joinPath(char* pcDest, char* pcMain, char* pcSuf) {
         /* at first ExpandEnvironmentStrings */
         if (0 == ExpandEnvironmentStrings(pcSuf, pcBuf, MAX_PATH)) {
                 /* JK: failure -> revert back - but it usually won't work, so report error to user! */
-                errorShow("Unable to ExpandEnvironmentStrings for session path", pcSuf);
+                errorShow("无法从会话路径中展开环境字符串", pcSuf);
                 strncpy(pcBuf, pcSuf, strlen(pcSuf));
         }
         /* now ExpandEnvironmentStringsForUser - only on win2000Pro and above */
@@ -273,7 +273,7 @@ int loadPath() {
 
                 if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL))
                 {
-                        errorShow("Unable to read configuration file, falling back to defaults", NULL);
+                        errorShow("无法读取配置文件，回滚到默认设置", NULL);
                         /* JK: default values are already there and clean-up at end */
                 }
                 else {
@@ -756,7 +756,7 @@ char *read_setting_s(settings_r *handle, const char *key)
                                 /* JK: at first ExpandEnvironmentStrings */
                                 if (0 == ExpandEnvironmentStrings(p2, buffer, size)) {
                                         /* JK: failure -> revert back - but it usually won't work, so report error to user! */
-                                        errorShow("Unable to ExpandEnvironmentStrings for session path", p2);
+                                        errorShow("无法从会话路径中展开环境字符串", p2);
                                         strncpy(p2, buffer, strlen(p2));
                                 }
                                 sfree(p);
@@ -1244,11 +1244,11 @@ int check_stored_host_key(const char *hostname, int port,
         else { /* key matched OK in registry */
                 /* JK: matching key found in registry -> warn user, ask what to do */
                 p = snewn(256, char);
-                userMB = MessageBox(NULL, "Host key is cached but in registry. "
-                        "Do you want to move it to file? \n\n"
-                        "Yes \t-> Move (delete key in registry)\n"
-                        "No \t-> Copy (keep key in registry)\n"
-                        "Cancel \t-> nothing will be done\n", "Security risk", MB_YESNOCANCEL|MB_ICONWARNING);
+                userMB = MessageBox(NULL, "主机密钥缓存在注册表中。"
+                        "需要将其移动到文件中么？\n\n"
+                        "是 \t-> 移动 (从注册表中删除密钥)\n"
+                        "否 \t-> 复制 (在注册表中保留密钥)\n"
+                        "取消 \t-> 不做任何操作\n", "安全警告", MB_YESNOCANCEL|MB_ICONWARNING);
 
                 if ((userMB == IDYES) || (userMB == IDNO)) {
                         /* JK: save key to file */
@@ -1266,12 +1266,12 @@ int check_stored_host_key(const char *hostname, int port,
                         hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
                         if (hFile == INVALID_HANDLE_VALUE) {
-                                errorShow("Unable to create file (key won't be deleted from registry)", p);
+                                errorShow("无法创建文件 (密钥不会从注册表中删除)", p);
                                 userMB = IDNO;
                         }
                         else {
                                 if (!WriteFile(hFile, key, strlen(key), &bytesRW, NULL)) {
-                                        errorShow("Unable to save key to file (key won't be deleted from registry)", NULL);
+                                        errorShow("无法保存密钥文件 (密钥不会从注册表中删除)", NULL);
                                         userMB = IDNO;
                                 }
                                 CloseHandle(hFile);
@@ -1282,7 +1282,7 @@ int check_stored_host_key(const char *hostname, int port,
                 if (userMB == IDYES) {
                         /* delete from registry */
                         if (RegDeleteValue(rkey, regname) != ERROR_SUCCESS) {
-                                errorShow("Unable to delete registry value", regname);
+                                errorShow("无法删除注册表中的值", regname);
                         }
                 }
                 /* JK: else (Cancel) -> nothing to be done right now */
@@ -1722,7 +1722,7 @@ static int transform_jumplist_registry
 
         if (!ReadFile(hFile, fileCont, fileSize, &bytesRW, NULL))
         {
-                errorShow("Unable to load jumplist file", jumplistpath);
+                errorShow("无法载入 jumplist 文件", jumplistpath);
                 sfree(fileCont);
                 return JUMPLISTREG_ERROR_KEYOPENCREATE_FAILURE;
         }
@@ -1772,11 +1772,11 @@ static int transform_jumplist_registry
 
         hFile = CreateFile(jumplistpath , GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
         if (hFile == INVALID_HANDLE_VALUE) {
-                errorShow("Unable to open file for writing", jumplistpath );
+                errorShow("无法打开文件用于保存", jumplistpath );
                 return JUMPLISTREG_ERROR_VALUEWRITE_FAILURE;
         }
         if (! WriteFile( (HANDLE) hFile, new_value, value_length, &bytesRW, NULL)) {
-                errorShow("Unable to save jumplist", jumplistpath);
+                errorShow("无法保存 jumplist", jumplistpath);
                 return JUMPLISTREG_ERROR_VALUEWRITE_FAILURE;
                 /* JK: memory should be freed here - fixme */
         }

@@ -105,7 +105,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
     errorCode = GetLastError();
     ltoa(errorCode, pcBuf, 10);
 
-    strcpy(pcMessage, "Error: ");
+    strcpy(pcMessage, "错误: ");
     strcat(pcMessage, pcErrText);
     strcat(pcMessage, "\n");
 
@@ -113,14 +113,14 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
         strcat(pcMessage, pcErrParam);
         strcat(pcMessage, "\n");
     }
-    strcat(pcMessage, "Error code: ");
+    strcat(pcMessage, "错误代码: ");
     strcat(pcMessage, pcBuf);
 
     /* JK: get parent-window and show */
     hwRParent = GetActiveWindow();
     if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent); }
 
-    if (MessageBox(hwRParent, pcMessage, "Error", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION) == 0) {
+    if (MessageBox(hwRParent, pcMessage, "错误", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION) == 0) {
         /* JK: this is really bad -> just ignore */
         return 0;
     }
@@ -1063,7 +1063,7 @@ static void update_sessions(void)
                     /* at first ExpandEnvironmentStrings */
                     if (0 == ExpandEnvironmentStrings(p2, pcBuf, MAX_PATH)) {
                         /* JK: failure -> revert back - but it ussualy won't work, so report error to user! */
-                        errorShow("Unable to ExpandEnvironmentStrings for session path", p2);
+                        errorShow("无法从会话路径中展开环境字符串", p2);
                         strncpy(pcBuf, p2, strlen(p2));
                     }
 
