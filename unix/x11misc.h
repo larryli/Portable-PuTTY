@@ -7,9 +7,8 @@
 
 #ifndef NOT_X_WINDOWS
 
-/*
- * x11misc.c.
- */
+/* Defined in unix/utils */
 void x11_ignore_error(Display *disp, unsigned char errcode);
+Display *get_x11_display(void);
 
 #endif

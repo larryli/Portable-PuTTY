@@ -1,7 +1,7 @@
 #include "rcstuff.h"
 
 #define APPNAME "Plink"
-#define APPDESC "ÃüÁîĞĞ SSH¡¢Telnet ºÍ Rlogin ¿Í»§¶Ë"
+#define APPDESC "å‘½ä»¤è¡Œ SSHã€Telnet å’Œ Rlogin å®¢æˆ·ç«¯"
 
 200 ICON "putty.ico"
 

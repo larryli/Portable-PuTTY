@@ -1,7 +1,7 @@
 #include "rcstuff.h"
 
 #define APPNAME "PSCP"
-#define APPDESC "ÃüÁîÐÐ SCP/SFTP ¿Í»§¶Ë"
+#define APPDESC "å‘½ä»¤è¡Œ SCP/SFTP å®¢æˆ·ç«¯"
 
 200 ICON "pscp.ico"
 

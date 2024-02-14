@@ -1,4 +1,4 @@
-#!/bin/sh 
+#!/bin/sh
 
 # Generate GPG signatures on a PuTTY release/snapshot directory as
 # delivered by Buildscr.
@@ -9,14 +9,14 @@
 
 set -e
 
-keyname=EEF20295D15F7E8A
+keyname=B43979F89F446CFD
 preliminary=false
 
 while :; do
     case "$1" in
         -r)
             shift
-            keyname=9DFE2648B43434E4
+            keyname=E4F83EA2AA4915EC
             ;;
         -p)
             shift
@@ -49,6 +49,8 @@ else
     for i in putty*src.zip putty*.tar.gz \
              w32/*.exe w32/*.zip w32/*.msi \
              w64/*.exe w64/*.zip w64/*.msi \
+             wa32/*.exe wa32/*.zip wa32/*.msi \
+             wa64/*.exe wa64/*.zip wa64/*.msi \
              w32old/*.exe w32old/*.zip; do
         sign --detach-sign "$i" "$i.gpg"
     done
