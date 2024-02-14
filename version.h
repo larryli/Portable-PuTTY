@@ -9,5 +9,5 @@
  */
 
 #define TEXTVER "发布版 0.80-p22-cn1 (便携版 0.22)"
-#define SSHVER "-Release-0-80-p22-cn1"
+#define SSHVER "-Release-0-80-Patch22-CN1"
 #define BINARY_VERSION 0,80,22,1

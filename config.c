@@ -2428,7 +2428,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
     s = ctrl_getset(b, "窗口/颜色", "adjust", str);
     sfree(str);
     ctrl_text(s, "选择列表中的颜色，然后点击"
-              "“修改”按钮改变其具体数值。",
+              "“修改”按钮改变\n其具体数值。",
               HELPCTX(colours_config));
     ctrl_columns(s, 2, 67, 33);
     cd = (struct colour_data *)ctrl_alloc(b, sizeof(struct colour_data));
@@ -2917,8 +2917,7 @@ void setup_config_box(struct controlbox *b, bool midsession,
                          FILTER_KEY_FILES, false, "选择私钥文件",
                          HELPCTX(ssh_auth_privkey),
                          conf_filesel_handler, I(CONF_keyfile));
-            ctrl_filesel(s, "与私钥一起使用的证书"
-                         "（可选）(E):", 'e',
+            ctrl_filesel(s, "与私钥一起使用的证书(可选) (E):", 'e',
                          NULL, false, "选择证书文件",
                          HELPCTX(ssh_auth_cert),
                          conf_filesel_handler, I(CONF_detached_cert));

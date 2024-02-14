@@ -1021,9 +1021,8 @@ SeatPromptResult verify_ssh_host_key(
             pds->hk_accept_action, appname);
         if (key && ssh_key_alg(key)->is_certificate) {
             seat_dialog_text_append(
-                text, SDT_PARA, "(Storing this certified key in the cache "
-                "will NOT cause its certification authority to be trusted "
-                "for any other key or host.)");
+                text, SDT_PARA, "(储存此认证密钥到缓存中将不会"
+                "导致其证书颁发机构信任任何其他密钥或主机。)");
         }
         seat_dialog_text_append(
             text, SDT_PARA, "如果仅仅只希望进行本次连接，而不将密钥储存，"
@@ -1085,38 +1084,34 @@ SeatPromptResult confirm_weak_crypto_primitive(
     const SeatDialogPromptDescriptions *pds =
         seat_prompt_descriptions(iseat.seat);
 
-    seat_dialog_text_append(text, SDT_TITLE, "%s Security Alert", appname);
+    seat_dialog_text_append(text, SDT_TITLE, "%s 安全警告", appname);
 
     switch (wcr) {
       case WCR_BELOW_THRESHOLD:
         seat_dialog_text_append(
             text, SDT_PARA,
-            "The first %s supported by the server is %s, "
-            "which is below the configured warning threshold.",
+            "服务器支持的第一个 %s 为 %s，"
+            "其低于配置的警告阀值。",
             algtype, algname);
         break;
       case WCR_TERRAPIN:
       case WCR_TERRAPIN_AVOIDABLE:
         seat_dialog_text_append(
             text, SDT_PARA,
-            "The %s selected for this session is %s, "
-            "which, with this server, is vulnerable to the 'Terrapin' attack "
-            "CVE-2023-48795, potentially allowing an attacker to modify "
-            "the encrypted session.",
+            "该会话选择的 %s 为 %s，"
+            "其连接的服务器会受到“Terrapin” CVE-2023-48795 漏洞攻击，"
+            "可能会让攻击者修改加密会话。",
             algtype, algname);
         seat_dialog_text_append(
             text, SDT_PARA,
-            "Upgrading, patching, or reconfiguring this SSH server is the "
-            "best way to avoid this vulnerability, if possible.");
+            "如果可以升级、修补或重新配置该 SSH 服务器是避免此漏洞的最佳方法。");
         if (wcr == WCR_TERRAPIN_AVOIDABLE) {
             seat_dialog_text_append(
                 text, SDT_PARA,
-                "You can also avoid this vulnerability by abandoning "
-                "this connection, moving ChaCha20 to below the "
-                "'warn below here' line in PuTTY's SSH cipher "
-                "configuration (so that an algorithm without the "
-                "vulnerability will be selected), and starting a new "
-                "connection.");
+                "另外还可以放弃此连接来避免此漏洞，"
+                "在 PuTTY SSH 密钥配置种将 ChaCha20 移动到"
+                "“下面为警告选项” 线下（以便选择没有漏洞的算法），"
+                "然后打开新的连接。");
         }
         break;
       default:
@@ -1125,14 +1120,14 @@ SeatPromptResult confirm_weak_crypto_primitive(
 
     /* In batch mode, we print the above information and then this
      * abort message, and stop. */
-    seat_dialog_text_append(text, SDT_BATCH_ABORT, "Connection abandoned.");
+    seat_dialog_text_append(text, SDT_BATCH_ABORT, "连接已放弃。");
 
     seat_dialog_text_append(
-        text, SDT_PARA, "To accept the risk and continue, %s. "
-        "To abandon the connection, %s.",
+        text, SDT_PARA, "接受风险并继续，%s。"
+        "放弃连接，%s。",
         pds->weak_accept_action, pds->weak_cancel_action);
 
-    seat_dialog_text_append(text, SDT_PROMPT, "Continue with connection?");
+    seat_dialog_text_append(text, SDT_PROMPT, "是否继续连接?");
 
     SeatPromptResult toret = seat_confirm_weak_crypto_primitive(
         iseat, text, callback, ctx);
@@ -1148,31 +1143,31 @@ SeatPromptResult confirm_weak_cached_hostkey(
     const SeatDialogPromptDescriptions *pds =
         seat_prompt_descriptions(iseat.seat);
 
-    seat_dialog_text_append(text, SDT_TITLE, "%s Security Alert", appname);
+    seat_dialog_text_append(text, SDT_TITLE, "%s 安全警告", appname);
 
     seat_dialog_text_append(
         text, SDT_PARA,
-        "The first host key type we have stored for this server "
-        "is %s, which is below the configured warning threshold.", algname);
+        "此服务器要存储的第一个主机密钥类型"
+        "为 %s，其低于配置的警告阀值。", algname);
 
     seat_dialog_text_append(
         text, SDT_PARA,
-        "The server also provides the following types of host key "
-        "above the threshold, which we do not have stored:");
+        "此服务器同时也提供有下列高于阀值的"
+        "主机密钥类型（不会存储）：");
 
     for (const char **p = betteralgs; *p; p++)
         seat_dialog_text_append(text, SDT_DISPLAY, "%s", *p);
 
     /* In batch mode, we print the above information and then this
      * abort message, and stop. */
-    seat_dialog_text_append(text, SDT_BATCH_ABORT, "Connection abandoned.");
+    seat_dialog_text_append(text, SDT_BATCH_ABORT, "连接已放弃。");
 
     seat_dialog_text_append(
-        text, SDT_PARA, "To accept the risk and continue, %s. "
-        "To abandon the connection, %s.",
+        text, SDT_PARA, "接受风险并继续，%s。"
+        "放弃连接，%s。",
         pds->weak_accept_action, pds->weak_cancel_action);
 
-    seat_dialog_text_append(text, SDT_PROMPT, "Continue with connection?");
+    seat_dialog_text_append(text, SDT_PROMPT, "是否继续连接?");
 
     SeatPromptResult toret = seat_confirm_weak_cached_hostkey(
         iseat, text, callback, ctx);
