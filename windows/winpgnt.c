@@ -2,7 +2,7 @@
  * Pageant: the PuTTY Authentication Agent.
  */
  /*
- * JK: disk config 0.7 from 8. 3. 2015
+ * JK: disk config 0.9 from 18. 11. 2015
  *
  * rewritten for storing information primary to disk
  * reasonable error handling and reporting except for
@@ -23,6 +23,7 @@
 #include "misc.h"
 #include "tree234.h"
 #include "winsecur.h"
+#include "licence.h"
 
 #include <shellapi.h>
 
@@ -101,7 +102,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
 	erChyba = GetLastError();		
 	ltoa(erChyba, pcBuf, 10);
 
-	strcpy(pcHlaska, "Error: ");
+	strcpy(pcHlaska, "错误: ");
 	strcat(pcHlaska, pcErrText);
 	strcat(pcHlaska, "\n");	
 
@@ -109,14 +110,14 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
 		strcat(pcHlaska, pcErrParam);
 		strcat(pcHlaska, "\n");
 	}
-	strcat(pcHlaska, "Error code: ");
+	strcat(pcHlaska, "错误代码: ");
 	strcat(pcHlaska, pcBuf);
 
 	/* get parent-window and show */
 	hwRodic = GetActiveWindow();
 	if (hwRodic != NULL) { hwRodic = GetLastActivePopup(hwRodic);}
 
-	if (MessageBox(hwRodic, pcHlaska, "Error", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+	if (MessageBox(hwRodic, pcHlaska, "错误", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
 		/* this is really bad -> just ignore */
 		return 0;
 	}
@@ -237,6 +238,7 @@ static int CALLBACK LicenceProc(HWND hwnd, UINT msg,
 {
     switch (msg) {
       case WM_INITDIALOG:
+        SetDlgItemText(hwnd, 1000, LICENCE_TEXT("\r\n\r\n"));
 	return 1;
       case WM_COMMAND:
 	switch (LOWORD(wParam)) {
@@ -261,7 +263,14 @@ static int CALLBACK AboutProc(HWND hwnd, UINT msg,
 {
     switch (msg) {
       case WM_INITDIALOG:
-	SetDlgItemText(hwnd, 100, ver);
+        {
+            char *text = dupprintf
+                ("Pageant\r\n\r\n%s\r\n\r\n%s",
+                 ver,
+                 "(C) " SHORT_COPYRIGHT_DETAILS "，保留所有权利。");
+            SetDlgItemText(hwnd, 1000, text);
+            sfree(text);
+        }
 	return 1;
       case WM_COMMAND:
 	switch (LOWORD(wParam)) {
@@ -446,7 +455,7 @@ static void add_keyfile(Filename *filename)
 	
     type = key_type(filename);
     if (type != SSH_KEYTYPE_SSH1 && type != SSH_KEYTYPE_SSH2) {
-	char *msg = dupprintf("无法载入该密钥 (%S)",
+	char *msg = dupprintf("无法载入该密钥 (%s)",
 			      key_type_to_str(type));
 	message_box(msg, APPNAME, MB_OK | MB_ICONERROR,
 		    HELPCTXID(errors_cantloadkey));
@@ -1787,7 +1796,7 @@ static void update_sessions(void)
 		fileCont = snewn(fileSize+16, char);
 
 		if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL)) {
-			errorShow("Unable to read configuration file, falling back to defaults", NULL);
+			errorShow("无法读取配置文件，回滚到默认配置", NULL);
 
 			/* JK: default values are already there - just clean-up */
 		}
@@ -1953,7 +1962,7 @@ static void update_sessions(void)
 			mii.fState = MFS_ENABLED;
 			mii.wID = (index_menu * 16) + IDM_SESSIONS_BASE;
 			/* JK: add [registry] mark */	
-			strcat(session_name, " [registry]");
+			strcat(session_name, " [注册表]");
 			mii.dwTypeData = session_name;
 			InsertMenuItem(session_menu, index_menu, TRUE, &mii);
 			index_menu++;
@@ -2072,7 +2081,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	    /* JK: execute putty.exe with working directory same as is for pageant.exe */
 		if((int)ShellExecute(hwnd, NULL, putty_path, _T(""), puttypath, SW_SHOW) <= 32)
 		{
-	  		MessageBox(NULL, "Unable to execute PuTTY!",
+	  		MessageBox(NULL, "无法执行 PuTTY！",
 			   "错误", MB_OK | MB_ICONERROR);
 	    }
 	    break;
@@ -2140,7 +2149,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 		    /* JK: execute putty.exe with working directory same as is for pageant.exe */
 			if((int)ShellExecute(hwnd, NULL, putty_path, param, puttypath, SW_SHOW) <= 32)
 			{
-			MessageBox(NULL, "Unable to execute PuTTY!", "错误",
+			MessageBox(NULL, "无法执行 PuTTY！", "错误",
 				   MB_OK | MB_ICONERROR);
 		    }
 		}
@@ -2194,7 +2203,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 			debug(("couldn't get default SID\n"));
 #endif
                         CloseHandle(filemap);
-                        sfree(ourself);
 			return 0;
                     }
 
@@ -2207,7 +2215,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
                                rc));
 #endif
                         CloseHandle(filemap);
-                        sfree(ourself);
                         sfree(ourself2);
 			return 0;
 		    }
@@ -2228,7 +2235,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
                         !EqualSid(mapowner, ourself2)) {
                         CloseHandle(filemap);
                         LocalFree(psd);
-                        sfree(ourself);
                         sfree(ourself2);
 			return 0;      /* security ID mismatch! */
                     }
@@ -2236,7 +2242,6 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 		    debug(("security stuff matched\n"));
 #endif
                     LocalFree(psd);
-                    sfree(ourself);
                     sfree(ourself2);
 		} else {
 #ifdef DEBUG_IPC
@@ -2274,7 +2279,7 @@ void spawn_cmd(char *cmdline, char * args, int show)
     if (ShellExecute(NULL, _T("open"), cmdline,
 		     args, NULL, show) <= (HINSTANCE) 32) {
 	char *msg;
-	msg = dupprintf("Failed to run \"%.100s\", Error: %d", cmdline,
+	msg = dupprintf("运行 \"%.100s\" 失败，错误: %d", cmdline,
 			(int)GetLastError());
 	MessageBox(NULL, msg, APPNAME, MB_OK | MB_ICONEXCLAMATION);
 	sfree(msg);

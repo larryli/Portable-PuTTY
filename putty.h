@@ -31,6 +31,8 @@ typedef struct terminal_tag Terminal;
  * Fingerprints of the PGP master keys that can be used to establish a trust
  * path between an executable and other files.
  */
+#define PGP_MASTER_KEY_FP \
+    "440D E3B5 B7A1 CA85 B3CC  1718 AB58 5DC6 0467 6F7C"
 #define PGP_RSA_MASTER_KEY_FP \
     "8F 15 97 DA 25 30 AB 0D  88 D1 92 54 11 CF 0C 4C"
 #define PGP_DSA_MASTER_KEY_FP \
@@ -837,6 +839,7 @@ void cleanup_exit(int);
     X(INT, NONE, sshbug_rekey2) \
     X(INT, NONE, sshbug_maxpkt2) \
     X(INT, NONE, sshbug_ignore2) \
+    X(INT, NONE, sshbug_oldgex2) \
     X(INT, NONE, sshbug_winadj) \
     X(INT, NONE, sshbug_chanreq) \
     /*                                                                \
@@ -1302,6 +1305,7 @@ int filename_serialise(const Filename *f, void *data);
 Filename *filename_deserialise(void *data, int maxsize, int *used);
 char *get_username(void);	       /* return value needs freeing */
 char *get_random_data(int bytes);      /* used in cmdgen.c */
+char filename_char_sanitise(char c);   /* rewrite special pathname chars */
 
 /*
  * Exports and imports from timing.c.

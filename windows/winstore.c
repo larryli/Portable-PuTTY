@@ -4,7 +4,7 @@
  */
 
 /*
- * JK: disk config 0.7 from 8. 3. 2015
+ * JK: disk config 0.9 from 18. 11. 2015
  *
  * rewritten for storing information primary to disk
  * reasonable error handling and reporting except for
@@ -28,7 +28,7 @@
 #endif
 
 static const char *const reg_jumplist_key = PUTTY_REG_POS "\\Jumplist";
-static const char *const reg_jumplist_value = "Recent sessions";
+static const char *const reg_jumplist_value = "最近会话";
 static const char *const puttystr = PUTTY_REG_POS "\\Sessions";
 
 static const char hex[16] = "0123456789ABCDEF";
@@ -91,7 +91,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
     hwRodic = GetActiveWindow();
     if (hwRodic != NULL) { hwRodic = GetLastActivePopup(hwRodic);}
   
-	if (MessageBox(hwRodic, pcHlaska, "Error", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+	if (MessageBox(hwRodic, pcHlaska, "错误", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
         /* JK: this is really bad -> just ignore */
         return 0;
     }
@@ -316,7 +316,7 @@ int loadPath() {
 
 		if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL))
 		{
-			errorShow("Unable to read configuration file, falling back to defaults", NULL);
+			errorShow("无法读取配置文件，回滚到默认配置", NULL);
 			/* JK: default values are already there and clean-up at end */
 		}
 		else {
@@ -410,7 +410,7 @@ void *open_settings_w(const char *sessionname, char **errmsg)
     *errmsg = NULL;
 
 	if (!sessionname || !*sessionname) {
-		sessionname = "Default Settings";
+		sessionname = "默认设置";
 	}
 
 	/* JK: if sessionname contains [registry] -> cut it off */
@@ -510,7 +510,7 @@ void close_settings_w(void *handle)
 	/* JK: we will write to disk now - open file, filename stored in handle already packed */
 	if ((hFile = FindFirstFile(sesspath, &FindFile)) == INVALID_HANDLE_VALUE) {
 		if (!createPath(sesspath)) {
-			errorShow("Unable to create directory for storing sessions", sesspath);
+			errorShow("无法创建存储会话的文件夹", sesspath);
 			return;
 		}
 	}
@@ -520,7 +520,7 @@ void close_settings_w(void *handle)
 
 	hFile = CreateFile( ((struct setPack*) handle)->fileBuf, GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
-		errorShow("Unable to open file for writing", ((struct setPack*) handle)->fileBuf );
+		errorShow("无法写文件", ((struct setPack*) handle)->fileBuf );
 		return;
 	}
 
@@ -541,7 +541,7 @@ void close_settings_w(void *handle)
 		writeok = writeok && WriteFile( (HANDLE) hFile, "\\\n", 2, &written, NULL);
 
 		if (!writeok) {
-			errorShow("Unable to save settings", st1->key);
+			errorShow("无法保存设置", st1->key);
 			return;
 			/* JK: memory should be freed here - fixme */
 		}
@@ -569,7 +569,7 @@ void *open_settings_r(const char *sessionname)
 	{
 		ses = snewn(strlen(sessionname)+16, char);
 		strcpy(ses, sessionname);
-		strcat(ses, " [registry]");
+		strcat(ses, " [注册表]");
 		p = open_settings_r_inner(ses);
 	}
 	return p;
@@ -591,7 +591,7 @@ void *open_settings_r_inner(const char *sessionname)
 	sp = snew( struct setPack );
 
 	if (!sessionname || !*sessionname) {
-		sessionname = "Default Settings";
+		sessionname = "默认设置";
 	}
 
 	/* JK: in the first call of this function we initialize path variables */
@@ -634,7 +634,7 @@ void *open_settings_r_inner(const char *sessionname)
 
 	/* JK: default settings must be read from registry */
 	/* 8.1.2007 - 0.1.6 try to load them from file if exists - nasty code duplication */
-	if (!strcmp(sessionname, "Default Settings")) {
+	if (!strcmp(sessionname, "默认设置")) {
 		GetCurrentDirectory( (MAX_PATH*2), oldpath);
 		if (SetCurrentDirectory(sesspath)) {
 			hFile = CreateFile(p, GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -673,7 +673,7 @@ void *open_settings_r_inner(const char *sessionname)
 			   assume only PuTTY project has PUTTY_WIN_RES_H defined
 			*/
 #ifdef PUTTY_WIN_RES_H	
-			errorShow("Unable to load file for reading", p);
+			errorShow("无法读取文件", p);
 #endif
 			sfree(p);
 			return NULL;
@@ -684,7 +684,7 @@ void *open_settings_r_inner(const char *sessionname)
 		fileCont = snewn(fileSize+16, char);
 
 		if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL)) {
-			errorShow("Unable to read session from file", p);
+			errorShow("无法从文件读取会话", p);
 			sfree(p);
 			return NULL;
 		}
@@ -978,7 +978,7 @@ void del_settings(const char *sessionname)
 			{
 				if (!DeleteFile(p2))
 				{
-					errorShow("Unable to delete settings.", NULL);
+					errorShow("无法删除设置。", NULL);
 				}
 			}
 			SetCurrentDirectory(oldpath);
@@ -1042,7 +1042,7 @@ char *enum_settings_next(void *handle, char *buffer, int buflen)
 
 	    if (RegEnumKey(e->key, e->i++, otherbuf, 3 * buflen) == ERROR_SUCCESS) {
 			unmungestr(otherbuf, buffer, buflen);
-			strcat(buffer, " [registry]");
+			strcat(buffer, " [注册表]");
 			sfree(otherbuf);
 			return buffer;
 		}
@@ -1274,11 +1274,11 @@ int verify_host_key(const char *hostname, int port,
 	else { /* key matched OK in registry */
 		/* JK: matching key found in registry -> warn user, ask what to do */
 		p = snewn(256, char);
-		userMB = MessageBox(NULL, "Host key is cached but in registry. "
-			"Do you want to move it to file? \n\n"
-			"Yes \t-> Move (delete key in registry)\n"
-			"No \t-> Copy (keep key in registry)\n"
-			"Cancel \t-> nothing will be done\n", "Security risk", MB_YESNOCANCEL|MB_ICONWARNING);
+		userMB = MessageBox(NULL, "主机密钥被缓存在注册表。"
+			"需要将其移动到文件中保存么？\n\n"
+			"是 \t-> 移动 (在注册表中删除密钥)\n"
+			"否 \t-> 复制 (在注册表中保留密钥)\n"
+			"取消 \t-> 不做任何操作\n", "安全警告", MB_YESNOCANCEL|MB_ICONWARNING);
 
 		if ((userMB == IDYES) || (userMB == IDNO)) {
 			/* JK: save key to file */
@@ -1296,12 +1296,12 @@ int verify_host_key(const char *hostname, int port,
 			hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 			if (hFile == INVALID_HANDLE_VALUE) {
-				errorShow("Unable to create file (key won't be deleted from registry)", p);
+				errorShow("无法创建文件 (密钥将不会从注册表中删除)", p);
 				userMB = IDNO;
 			}
 			else {
 				if (!WriteFile(hFile, key, strlen(key), &bytesRW, NULL)) {
-					errorShow("Unable to save key to file (key won't be deleted from registry)", NULL);
+					errorShow("无法保存密钥到文件 (密钥将不会从注册表中删除)", NULL);
 					userMB = IDNO;
 				}
 				CloseHandle(hFile);
@@ -1311,7 +1311,7 @@ int verify_host_key(const char *hostname, int port,
 		if (userMB == IDYES) {
 			/* delete from registry */
 			if (RegDeleteValue(rkey, regname) != ERROR_SUCCESS) {
-				errorShow("Unable to delete registry value", regname);
+				errorShow("无法删除注册表值", regname);
 			}
 		}
 		/* JK: else (Cancel) -> nothing to be done right now */
@@ -1350,11 +1350,11 @@ void store_host_key(const char *hostname, int port,
 	hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE) {
-		errorShow("Unable to create file", p);
+		errorShow("无法创建文件", p);
 	}
 	else {
 		if (!WriteFile(hFile, key, strlen(key), &bytesWritten, NULL)) {
-			errorShow("Unable to save key to file", NULL);
+			errorShow("无法保存密钥到文件", NULL);
 		}
 		CloseHandle(hFile);
 	}
@@ -1372,7 +1372,7 @@ static int try_random_seed(char const *path, int action, HANDLE *ret)
 {
     if (action == DEL) {
         if (!DeleteFile(path) && GetLastError() != ERROR_FILE_NOT_FOUND) {
-            nonfatal("Unable to delete '%s': %s", path,
+            nonfatal("无法删除 '%s': %s", path,
                      win_strerror(GetLastError()));
         }
 	*ret = INVALID_HANDLE_VALUE;

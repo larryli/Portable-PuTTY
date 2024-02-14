@@ -388,7 +388,8 @@ Socket new_connection(SockAddr addr, char *hostname,
 	sk_proxy_write_eof,
 	sk_proxy_flush,
 	sk_proxy_set_frozen,
-	sk_proxy_socket_error
+	sk_proxy_socket_error,
+        NULL, /* peer_info */
     };
 
     static const struct plug_function_table plug_fn_table = {
@@ -1187,9 +1188,11 @@ int proxy_socks5_negotiate (Proxy_Socket p, int change)
 		char userpwbuf[255 + 255 + 3];
 		int ulen, plen;
 		ulen = strlen(username);
-		if (ulen > 255) ulen = 255; if (ulen < 1) ulen = 1;
+		if (ulen > 255) ulen = 255;
+		if (ulen < 1) ulen = 1;
 		plen = strlen(password);
-		if (plen > 255) plen = 255; if (plen < 1) plen = 1;
+		if (plen > 255) plen = 255;
+		if (plen < 1) plen = 1;
 		userpwbuf[0] = 1;      /* version number of subnegotiation */
 		userpwbuf[1] = ulen;
 		memcpy(userpwbuf+2, username, ulen);

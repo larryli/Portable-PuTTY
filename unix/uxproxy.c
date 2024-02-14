@@ -104,6 +104,8 @@ static void sk_localproxy_close (Socket s)
     uxsel_del(ps->from_cmd);
     close(ps->from_cmd);
 
+    bufchain_clear(&ps->pending_input_data);
+    bufchain_clear(&ps->pending_output_data);
     sfree(ps);
 }
 
@@ -245,7 +247,8 @@ Socket platform_new_connection(SockAddr addr, char *hostname,
 	sk_localproxy_write_eof,
 	sk_localproxy_flush,
 	sk_localproxy_set_frozen,
-	sk_localproxy_socket_error
+	sk_localproxy_socket_error,
+        NULL, /* peer_info */
     };
 
     Local_Proxy_Socket ret;
