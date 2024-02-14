@@ -2437,7 +2437,7 @@ static void erase_lots(Terminal *term,
 
     /* After an erase of lines from the top of the screen, we shouldn't
      * bring the lines back again if the terminal enlarges (since the user or
-     * application has explictly thrown them away). */
+     * application has explicitly thrown them away). */
     if (erasing_lines_from_top && !(term->alt_which))
 	term->tempsblines = 0;
 }
@@ -4327,7 +4327,7 @@ static void term_out(Terminal *term)
 			    for (i = 1; i < term->esc_nargs; i++) {
 				if (i != 1)
 				    strcat(term->id_string, ";");
-				sprintf(lbuf, "%d", term->esc_args[i]);
+				sprintf(lbuf, "%u", term->esc_args[i]);
 				strcat(term->id_string, lbuf);
 			    }
 			    strcat(term->id_string, "c");

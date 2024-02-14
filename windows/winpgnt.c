@@ -82,44 +82,42 @@ static char puttypath[2 * MAX_PATH] = "\0";
 
 /* JK: my generic function for simplyfing error reporting */
 DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
-
-	HWND hwRodic;
-	DWORD erChyba;
+	HWND hwRParent;
+	DWORD errorCode;
 	char pcBuf[16];
-	char* pcHlaska;
+	char* pcMessage;
+
+	if (pcErrParam != NULL) {
+		pcMessage = snewn(strlen(pcErrParam) + strlen(pcErrText) + 31, char);
+	} else {
+		pcMessage = snewn(strlen(pcErrText) + 31, char);
+	}
+
+	errorCode = GetLastError();		
+	ltoa(errorCode, pcBuf, 10);
+
+	strcpy(pcMessage, "´íÎó: ");
+	strcat(pcMessage, pcErrText);
+	strcat(pcMessage, "\n");	
 
 	if (pcErrParam) {
-		pcHlaska = snewn(strlen(pcErrParam) + strlen(pcErrText) + 31, char);
+		strcat(pcMessage, pcErrParam);
+		strcat(pcMessage, "\n");
 	}
-	else {
-		pcHlaska = snewn(strlen(pcErrText) + 31, char);
-	}
+	strcat(pcMessage, "´íÎó´úÂë: ");
+	strcat(pcMessage, pcBuf);
 
-	erChyba = GetLastError();
-	ltoa(erChyba, pcBuf, 10);
+	/* JK: get parent-window and show */
+	hwRParent = GetActiveWindow();
+	if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent);}
 
-	strcpy(pcHlaska, "´íÎó: ");
-	strcat(pcHlaska, pcErrText);
-	strcat(pcHlaska, "\n");
-
-	if (pcErrParam) {
-		strcat(pcHlaska, pcErrParam);
-		strcat(pcHlaska, "\n");
-	}
-	strcat(pcHlaska, "´íÎó´úÂë: ");
-	strcat(pcHlaska, pcBuf);
-
-	/* get parent-window and show */
-	hwRodic = GetActiveWindow();
-	if (hwRodic != NULL) { hwRodic = GetLastActivePopup(hwRodic);}
-
-	if (MessageBox(hwRodic, pcHlaska, "´íÎó", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
-		/* this is really bad -> just ignore */
+	if (MessageBox(hwRParent, pcMessage, "´íÎó", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+		/* JK: this is really bad -> just ignore */
 		return 0;
 	}
 
-	sfree(pcHlaska);
-	return erChyba;
+	sfree(pcMessage);
+	return errorCode;
 };
 
 /*
@@ -228,6 +226,12 @@ static INT_PTR CALLBACK AboutProc(HWND hwnd, UINT msg,
 	    DialogBox(hinst, MAKEINTRESOURCE(214), hwnd, LicenceProc);
 	    EnableWindow(hwnd, 1);
 	    SetActiveWindow(hwnd);
+	    return 0;
+	  case 102:
+	    /* Load web browser */
+	    ShellExecute(hwnd, "open",
+			 "https://github.com/larryli/PuTTY",
+			 0, 0, SW_SHOWDEFAULT);
 	    return 0;
 	}
 	return 0;
@@ -521,7 +525,7 @@ static void prompt_add_keyfile(void)
 {
     OPENFILENAME of;
     char *filelist = snewn(8192, char);
-
+	
     if (!keypath) keypath = filereq_new();
     memset(&of, 0, sizeof(of));
     of.hwndOwner = hwnd;
@@ -633,14 +637,14 @@ static INT_PTR CALLBACK KeyListProc(HWND hwnd, UINT msg,
 		int i;
 		int rCount, sCount;
 		int *selectedArray;
-
+		
 		/* our counter within the array of selected items */
 		int itemNum;
-
+		
 		/* get the number of items selected in the list */
-		int numSelected =
+		int numSelected = 
 			SendDlgItemMessage(hwnd, 100, LB_GETSELCOUNT, 0, 0);
-
+		
 		/* none selected? that was silly */
 		if (numSelected == 0) {
 		    MessageBeep(0);
@@ -651,19 +655,19 @@ static INT_PTR CALLBACK KeyListProc(HWND hwnd, UINT msg,
 		selectedArray = snewn(numSelected, int);
 		SendDlgItemMessage(hwnd, 100, LB_GETSELITEMS,
 				numSelected, (WPARAM)selectedArray);
-
+		
 		itemNum = numSelected - 1;
 		rCount = pageant_count_ssh1_keys();
 		sCount = pageant_count_ssh2_keys();
-
-		/* go through the non-rsakeys until we've covered them all,
+		
+		/* go through the non-rsakeys until we've covered them all, 
 		 * and/or we're out of selected items to check. note that
 		 * we go *backwards*, to avoid complications from deleting
 		 * things hence altering the offset of subsequent items
 		 */
                 for (i = sCount - 1; (itemNum >= 0) && (i >= 0); i--) {
                     skey = pageant_nth_ssh2_key(i);
-
+			
                     if (selectedArray[itemNum] == rCount + i) {
                         pageant_delete_ssh2_key(skey);
                         skey->alg->freekey(skey->data);
@@ -671,7 +675,7 @@ static INT_PTR CALLBACK KeyListProc(HWND hwnd, UINT msg,
                         itemNum--;
                     }
 		}
-
+		
 		/* do the same for the rsa keys */
 		for (i = rCount - 1; (itemNum >= 0) && (i >= 0); i--) {
                     rkey = pageant_nth_ssh1_key(i);
@@ -684,7 +688,7 @@ static INT_PTR CALLBACK KeyListProc(HWND hwnd, UINT msg,
                     }
 		}
 
-		sfree(selectedArray);
+		sfree(selectedArray); 
 		keylist_update();
 	    }
 	    return 0;
@@ -743,7 +747,7 @@ static BOOL AddTrayIcon(HWND hwnd)
     res = Shell_NotifyIcon(NIM_ADD, &tnid);
 
     if (hicon) DestroyIcon(hicon);
-
+    
     return res;
 }
 
@@ -929,7 +933,7 @@ static void update_sessions(void)
 			TCHAR session_name[MAX_PATH + 1 + 16];
 
 			unmungestr(FindFileData.cFileName, session_name, MAX_PATH);
-			/* JK: cut off session.suffix */
+			/* JK: cut off session.suffix */						
 			p = session_name + strlen(session_name) - strlen(sessionsuffix);
 			if (strncmp(p, sessionsuffix, strlen(sessionsuffix)) == 0) {
 				*p = '\0';
@@ -954,7 +958,7 @@ static void update_sessions(void)
 
 			TCHAR session_name[MAX_PATH + 1];
 			unmungestr(FindFileData.cFileName, session_name, MAX_PATH);
-			/* JK: cut off sessionsuffix */
+			/* JK: cut off sessionsuffix */						
 			p = session_name + strlen(session_name) - strlen(sessionsuffix);
 			if (strncmp(p, sessionsuffix, strlen(sessionsuffix)) == 0) {
 				*p = '\0';
@@ -992,7 +996,7 @@ static void update_sessions(void)
 			mii.fType = MFT_STRING;
 			mii.fState = MFS_ENABLED;
 			mii.wID = (index_menu * 16) + IDM_SESSIONS_BASE;
-			/* JK: add [registry] mark */
+			/* JK: add [registry] mark */	
 			strcat(session_name, " [×¢²á±í]");
 			mii.dwTypeData = session_name;
 			InsertMenuItem(session_menu, index_menu, TRUE, &mii);
@@ -1079,7 +1083,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 	    AddTrayIcon(hwnd);
         }
         break;
-
+        
       case WM_SYSTRAY:
 	if (lParam == WM_RBUTTONUP) {
 	    POINT cursorpos;
@@ -1126,7 +1130,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 				       NULL, KeyListProc);
 		ShowWindow(keylist, SW_SHOWNORMAL);
 	    }
-	    /*
+	    /* 
 	     * Sometimes the window comes up minimised / hidden for
 	     * no obvious reason. Prevent this. This also brings it
 	     * to the front if it's already present (the user
@@ -1150,7 +1154,7 @@ static LRESULT CALLBACK WndProc(HWND hwnd, UINT message,
 		aboutbox = CreateDialog(hinst, MAKEINTRESOURCE(213),
 					NULL, AboutProc);
 		ShowWindow(aboutbox, SW_SHOWNORMAL);
-		/*
+		/* 
 		 * Sometimes the window comes up minimised / hidden
 		 * for no obvious reason. Prevent this.
 		 */
@@ -1562,4 +1566,3 @@ int WINAPI WinMain(HINSTANCE inst, HINSTANCE prev, LPSTR cmdline, int show)
     cleanup_exit(msg.wParam);
     return msg.wParam;		       /* just in case optimiser complains */
 }
-

@@ -19,7 +19,7 @@
  * stddef.h. So here we try to make sure _some_ standard header is
  * included which defines uintptr_t. */
 #include <stddef.h>
-#if !defined _MSC_VER || _MSC_VER >= 1600
+#if !defined _MSC_VER || _MSC_VER >= 1600 || defined __clang__
 #include <stdint.h>
 #endif
 
@@ -128,15 +128,24 @@ struct FontSpec *fontspec_new(const char *name,
  *
  * (DECL_WINDOWS_FUNCTION works with both these variants.)
  */
-#define DECL_WINDOWS_FUNCTION(linkage, rettype, name, params) \
-    typedef rettype (WINAPI *t_##name) params; \
+#define TYPECHECK(to_check, to_return)          \
+    (sizeof(to_check) ? to_return : to_return)
+#define DECL_WINDOWS_FUNCTION(linkage, rettype, name, params)   \
+    typedef rettype (WINAPI *t_##name) params;                  \
     linkage t_##name p_##name
 #define STR1(x) #x
 #define STR(x) STR1(x)
-#define GET_WINDOWS_FUNCTION_PP(module, name) \
-    (p_##name = module ? (t_##name) GetProcAddress(module, STR(name)) : NULL)
-#define GET_WINDOWS_FUNCTION(module, name) \
-    (p_##name = module ? (t_##name) GetProcAddress(module, #name) : NULL)
+#define GET_WINDOWS_FUNCTION_PP(module, name)                           \
+    TYPECHECK((t_##name)NULL == name,                                   \
+              (p_##name = module ?                                      \
+               (t_##name) GetProcAddress(module, STR(name)) : NULL))
+#define GET_WINDOWS_FUNCTION(module, name)                              \
+    TYPECHECK((t_##name)NULL == name,                                   \
+              (p_##name = module ?                                      \
+               (t_##name) GetProcAddress(module, #name) : NULL))
+#define GET_WINDOWS_FUNCTION_NO_TYPECHECK(module, name) \
+    (p_##name = module ?                                \
+     (t_##name) GetProcAddress(module, #name) : NULL)
 
 /*
  * Global variables. Most modules declare these `extern', but
@@ -275,7 +284,7 @@ GLOBAL void *logctx;
 /*
  * Exports from winnet.c.
  */
-extern int select_result(WPARAM, LPARAM);
+extern void select_result(WPARAM, LPARAM);
 
 /*
  * winnet.c dynamically loads WinSock 2 or WinSock 1 depending on
@@ -320,6 +329,7 @@ struct ctlpos {
     int boxystart, boxid;
     char *boxtext;
 };
+void init_common_controls(void);       /* also does some DLL-loading */
 
 /*
  * Exports from winutils.c.
@@ -511,6 +521,22 @@ HMODULE load_system32_dll(const char *libname);
 const char *win_strerror(int error);
 void restrict_process_acl(void);
 GLOBAL int restricted_acl;
+
+/* A few pieces of up-to-date Windows API definition needed for older
+ * compilers. */
+#ifndef LOAD_LIBRARY_SEARCH_SYSTEM32
+#define LOAD_LIBRARY_SEARCH_SYSTEM32 0x00000800
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_USER_DIRS
+#define LOAD_LIBRARY_SEARCH_USER_DIRS 0x00000400
+#endif
+#ifndef LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR
+#define LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR 0x00000100
+#endif
+#ifndef DLL_DIRECTORY_COOKIE
+typedef PVOID DLL_DIRECTORY_COOKIE;
+DECLSPEC_IMPORT DLL_DIRECTORY_COOKIE WINAPI AddDllDirectory (PCWSTR NewDirectory);
+#endif
 
 /*
  * Exports from sizetip.c.

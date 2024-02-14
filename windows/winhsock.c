@@ -54,10 +54,11 @@ static int handle_gotdata(struct handle *h, void *data, int len)
     Handle_Socket ps = (Handle_Socket) handle_get_privdata(h);
 
     if (len < 0) {
-	return plug_closing(ps->plug, "Read error from handle",
-			    0, 0);
+	plug_closing(ps->plug, "Read error from handle", 0, 0);
+	return 0;
     } else if (len == 0) {
-	return plug_closing(ps->plug, NULL, 0, 0);
+	plug_closing(ps->plug, NULL, 0, 0);
+	return 0;
     } else {
         assert(ps->frozen != FROZEN && ps->frozen != THAWING);
         if (ps->frozen == FREEZING) {
@@ -76,7 +77,8 @@ static int handle_gotdata(struct handle *h, void *data, int len)
              */
             return INT_MAX;
         } else {
-            return plug_receive(ps->plug, 0, data, len);
+            plug_receive(ps->plug, 0, data, len);
+	    return 0;
         }
     }
 }
@@ -94,7 +96,15 @@ static int handle_stderr(struct handle *h, void *data, int len)
 static void handle_sentdata(struct handle *h, int new_backlog)
 {
     Handle_Socket ps = (Handle_Socket) handle_get_privdata(h);
-    
+
+    if (new_backlog < 0) {
+        /* Special case: this is actually reporting an error writing
+         * to the underlying handle, and our input value is the error
+         * code itself, negated. */
+        plug_closing(ps->plug, win_strerror(-new_backlog), -new_backlog, 0);
+        return;
+    }
+
     plug_sent(ps->plug, new_backlog);
 }
 
@@ -160,7 +170,7 @@ static void handle_socket_unfreeze(void *psv)
 {
     Handle_Socket ps = (Handle_Socket) psv;
     void *data;
-    int len, new_backlog;
+    int len;
 
     /*
      * If we've been put into a state other than THAWING since the
@@ -180,7 +190,7 @@ static void handle_socket_unfreeze(void *psv)
      * have the effect of trying to close this socket.
      */
     ps->defer_close = TRUE;
-    new_backlog = plug_receive(ps->plug, 0, data, len);
+    plug_receive(ps->plug, 0, data, len);
     bufchain_consume(&ps->inputdata, len);
     ps->defer_close = FALSE;
     if (ps->deferred_close) {
@@ -199,7 +209,7 @@ static void handle_socket_unfreeze(void *psv)
          * Otherwise, we've successfully thawed!
          */
         ps->frozen = UNFROZEN;
-        handle_unthrottle(ps->recv_h, new_backlog);
+        handle_unthrottle(ps->recv_h, 0);
     }
 }
 
@@ -274,7 +284,17 @@ static char *sk_handle_peer_info(Socket s)
 
     if (!kernel32_module) {
         kernel32_module = load_system32_dll("kernel32.dll");
-        GET_WINDOWS_FUNCTION(kernel32_module, GetNamedPipeClientProcessId);
+#if (defined _MSC_VER && _MSC_VER < 1900) || defined __MINGW32__ || defined COVERITY
+        /* For older Visual Studio, and MinGW too (at least as of
+         * Ubuntu 16.04), this function isn't available in the header
+         * files to type-check. Ditto the toolchain I use for
+         * Coveritying the Windows code. */
+        GET_WINDOWS_FUNCTION_NO_TYPECHECK(
+            kernel32_module, GetNamedPipeClientProcessId);
+#else
+        GET_WINDOWS_FUNCTION(
+            kernel32_module, GetNamedPipeClientProcessId);
+#endif
     }
 
     /*

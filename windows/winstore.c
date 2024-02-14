@@ -35,7 +35,7 @@ static const char hex[16] = "0123456789ABCDEF";
 
 static int tried_shgetfolderpath = FALSE;
 static HMODULE shell32_module = NULL;
-DECL_WINDOWS_FUNCTION(static, HRESULT, SHGetFolderPathA,
+DECL_WINDOWS_FUNCTION(static, HRESULT, SHGetFolderPathA, 
 		      (HWND, int, HANDLE, DWORD, LPSTR));
 
 /* JK: path of settings saved in files */
@@ -61,43 +61,42 @@ struct setPack {
 
 /* JK: my generic function for simplyfing error reporting */
 DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
-
-	HWND hwRodic;
-	DWORD erChyba;
+	HWND hwRParent;
+	DWORD errorCode;
 	char pcBuf[16];
-	char* pcHlaska;
-	if (pcErrParam != NULL)	{
-		pcHlaska = snewn(strlen(pcErrParam) + strlen(pcErrText) + 31, char);
+	char* pcMessage;
+
+	if (pcErrParam != NULL) {
+		pcMessage = snewn(strlen(pcErrParam) + strlen(pcErrText) + 31, char);
 	} else {
-		pcHlaska = snewn(strlen(pcErrText) + 31, char);
+		pcMessage = snewn(strlen(pcErrText) + 31, char);
 	}
 
+	errorCode = GetLastError();		
+	ltoa(errorCode, pcBuf, 10);
 
-	erChyba = GetLastError();
-	ltoa(erChyba, pcBuf, 10);
-
-	strcpy(pcHlaska, "´íÎó: ");
-	strcat(pcHlaska, pcErrText);
-	strcat(pcHlaska, "\n");
+	strcpy(pcMessage, "´íÎó: ");
+	strcat(pcMessage, pcErrText);
+	strcat(pcMessage, "\n");	
 
 	if (pcErrParam) {
-		strcat(pcHlaska, pcErrParam);
-		strcat(pcHlaska, "\n");
+		strcat(pcMessage, pcErrParam);
+		strcat(pcMessage, "\n");
 	}
-    strcat(pcHlaska, "´íÎó´úÂë: ");
-	strcat(pcHlaska, pcBuf);
+	strcat(pcMessage, "´íÎó´úÂë: ");
+	strcat(pcMessage, pcBuf);
 
-    /* JK: get parent-window and show */
-    hwRodic = GetActiveWindow();
-    if (hwRodic != NULL) { hwRodic = GetLastActivePopup(hwRodic);}
+	/* JK: get parent-window and show */
+	hwRParent = GetActiveWindow();
+	if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent);}
 
-	if (MessageBox(hwRodic, pcHlaska, "´íÎó", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
-        /* JK: this is really bad -> just ignore */
-        return 0;
-    }
+	if (MessageBox(hwRParent, pcMessage, "´íÎó", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+		/* JK: this is really bad -> just ignore */
+		return 0;
+	}
 
-	sfree(pcHlaska);
-	return erChyba;
+	sfree(pcMessage);
+	return errorCode;
 };
 
 static void mungestr(const char *in, char *out)
@@ -177,7 +176,7 @@ int createPath(char* dir) {
 		}
 		return 1;
 	}
-
+	
 	*p = '\0';
 	createPath(dir);
 	*p = '\\';
@@ -212,12 +211,12 @@ char* joinPath(char* pcDest, char* pcMain, char* pcSuf) {
 	static HMODULE userenv_module = NULL;
 	typedef BOOL (WINAPI *p_ExpandESforUser_t) (HANDLE, LPCTSTR, LPTSTR, DWORD);
 	static p_ExpandESforUser_t p_ExpandESforUser = NULL;
-
+	
 	HMODULE userenv_module = LoadLibrary("USERENV.DLL");
 
 	if (userenv_module) {
 	    p_ExpandESforUser = (p_ExpandESforUser_t) GetProcAddress(shell32_module, "ExpandEnvironmentStringsForUserA");
-
+		
 		if (p_ExpandESforUser) {
 
 			TOKEN_IMPERSONATE
@@ -272,7 +271,7 @@ int loadPath() {
 	/* JK:  save path/curdir */
 	GetCurrentDirectory( (MAX_PATH*2), oldpath);
 
-
+	
 	/* JK: try curdir for putty.conf first */
 	hFile = CreateFile("putty.conf",GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 
@@ -354,7 +353,7 @@ int loadPath() {
 				else if (!strcmp(p, "seedfile")) {
 					p = strchr(p2, '\n');
 					*p = '\0';
-					joinPath(seedpath, puttypath, p2);
+					joinPath(seedpath, puttypath, p2);			
 					p2 = seedpath+strlen(seedpath)-1;
 					while ((*p2 == ' ')||(*p2 == '\n')||(*p2 == '\r')||(*p2 == '\t')) --p2;
 					*(p2+1) = '\0';
@@ -378,7 +377,7 @@ int loadPath() {
 				else if (!strcmp(p, "jumplist")) {
 					p = strchr(p2, '\n');
 					*p = '\0';
-					joinPath(jumplistpath, puttypath, p2);
+					joinPath(jumplistpath, puttypath, p2);			
 					p2 = jumplistpath+strlen(jumplistpath)-1;
 					while ((*p2 == ' ')||(*p2 == '\n')||(*p2 == '\r')||(*p2 == '\t')) --p2;
 					*(p2+1) = '\0';
@@ -386,7 +385,7 @@ int loadPath() {
 				}
 				++p;
 			}
-
+			
 			if (jumplistdefined == 0) { strcpy(jumplistpath, ":"); }
 		}
 		CloseHandle(hFile);
@@ -643,7 +642,7 @@ void *open_settings_r_inner(const char *sessionname)
 			hFile = INVALID_HANDLE_VALUE;
 		}
 		SetCurrentDirectory(oldpath);
-
+		
 		if (hFile == INVALID_HANDLE_VALUE) {
 			sp->fromFile = 0;
 		}
@@ -663,7 +662,7 @@ void *open_settings_r_inner(const char *sessionname)
 			hFile = INVALID_HANDLE_VALUE;
 		}
 		SetCurrentDirectory(oldpath);
-
+		
 		if (hFile == INVALID_HANDLE_VALUE) {
 			/* JK: some error occured -> just report and fail */
 
@@ -672,7 +671,7 @@ void *open_settings_r_inner(const char *sessionname)
 			   So for PSCP/PSFTP/PLINK, do not report error - so report error only for PuTTY
 			   assume only PuTTY project has PUTTY_WIN_RES_H defined
 			*/
-#ifdef PUTTY_WIN_RES_H
+#ifdef PUTTY_WIN_RES_H	
 			errorShow("ÎÞ·¨¶ÁÈ¡ÎÄ¼þ", p);
 #endif
 			sfree(p);
@@ -693,7 +692,7 @@ void *open_settings_r_inner(const char *sessionname)
 		st1 = snew( struct setItem );
 		sp->fromFile = 1;
 		sp->handle = st1;
-
+		
 		p = fileCont;
 		sp->fileBuf = fileCont; /* JK: remeber for memory freeing */
 
@@ -759,7 +758,7 @@ char *read_setting_s(void *handle, const char *key)
     if (!handle) return NULL;
 
 	if (((struct setPack*) handle)->fromFile) {
-
+		
 		p = snewn(3 * strlen(key) + 1, char);
 		mungestr(key, p);
 
@@ -779,7 +778,7 @@ char *read_setting_s(void *handle, const char *key)
 				}
 				sfree(p);
 				sfree(p2);
-				return buffer;
+				return buffer;				
 			}
 			st = st->next;
 		}
@@ -817,7 +816,7 @@ int read_setting_i(void *handle, const char *key, int defvalue)
 		st = ((struct setPack*) handle)->handle;
 		while (st->key) {
 			if ( strcmp(st->key, key) == 0) {
-				return atoi(st->value);
+				return atoi(st->value);				
 			}
 			st = st->next;
 		}
@@ -948,7 +947,7 @@ void del_settings(const char *sessionname)
 
 		p = snewn(3 * strlen(sessionname) + 1, char);
 		mungestr(sessionname, p);
-
+		
 		if (RegOpenKey(HKEY_CURRENT_USER, puttystr, &subkey1) != ERROR_SUCCESS)	return;
 
 		RegDeleteKey(subkey1, p);
@@ -964,7 +963,7 @@ void del_settings(const char *sessionname)
 		strcat(pss, sessionsuffix);
 		p2 = snewn(3 * strlen(p) + 1, char);
 		p2ss = snewn(3 * strlen(pss) + 1, char);
-
+		
 		mungestr(p, p2);
 		strcpy(p, p2);
 		packstr(p, p2);
@@ -1008,7 +1007,7 @@ void *enum_settings_start(void)
 		loadPath();
 	}
 	/* JK: we have path variables */
-
+	
 	/* JK: let's do what this function should normally do */
 	ret = snew(struct enumsettings);
 
@@ -1035,7 +1034,7 @@ char *enum_settings_next(void *handle, char *buffer, int buflen)
 	char *pss;
 
 	if (!handle) return NULL;	/* JK: new in 0.1.3 */
-
+	
 	otherbuf = snewn( (3*buflen)+1, char); /* must be here */
 
 	if (! ((struct enumsettings *)handle)->fromFile ) {
@@ -1149,7 +1148,7 @@ int verify_host_key(const char *hostname, int port,
 	/* JK: settings on disk - every hostkey as file in dir */
 	GetCurrentDirectory( (MAX_PATH*2), oldpath);
 	if (SetCurrentDirectory(sshkpath)) {
-
+		
 		p = snewn(3 * strlen(regname) + 1 + 16, char);
 		packstr(regname, p);
 		strcat(p, keysuffix);
@@ -1186,7 +1185,7 @@ int verify_host_key(const char *hostname, int port,
 	else {
 		/* JK: there are no hostkeys as files -> try registry -> nothing to do here now */
 	}
-
+	
 	/* JK: directory/file not found -> try registry */
 	if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_REG_POS "\\SshHostKeys", &rkey) != ERROR_SUCCESS) {
 		sfree(otherstr);
@@ -1292,7 +1291,7 @@ int verify_host_key(const char *hostname, int port,
 			p = snewn(3*strlen(regname) + 1 + 16, char);
 			packstr(regname, p);
 			strcat(p, keysuffix);
-
+			
 			hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 			if (hFile == INVALID_HANDLE_VALUE) {
@@ -1315,12 +1314,12 @@ int verify_host_key(const char *hostname, int port,
 			}
 		}
 		/* JK: else (Cancel) -> nothing to be done right now */
-
+				
 		RegCloseKey(rkey);
 
 		sfree(otherstr);
 		sfree(regname);
-		return 0;
+		return 0;		       
 	}
 }
 
@@ -1406,7 +1405,7 @@ static HANDLE access_random_seed(int action)
     HKEY rkey;
     DWORD type, size;
     HANDLE rethandle;
-//char seedpath[2 * MAX_PATH + 10] = "\0";
+	char seedpath_local[2 * MAX_PATH + 10] = "\0";
 
 	/* JK: settings in conf file are the most prior */
 	if (seedpath != "\0") {
@@ -1423,7 +1422,7 @@ static HANDLE access_random_seed(int action)
     /*
      * Iterate over a selection of possible random seed paths until
      * we find one that works.
-     *
+     * 
      * We do this iteration separately for reading and writing,
      * meaning that we will automatically migrate random seed files
      * if a better location becomes available (by reading from the
@@ -1435,15 +1434,15 @@ static HANDLE access_random_seed(int action)
      * First, try the location specified by the user in the
      * Registry, if any.
      */
-    size = sizeof(seedpath);
+    size = sizeof(seedpath_local);
     if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_REG_POS, &rkey) == ERROR_SUCCESS) {
 		int ret = RegQueryValueEx(rkey, "RandSeedFile",
-					  0, &type, (BYTE *)seedpath, &size);
+					  0, &type, (BYTE *)seedpath_local, &size);
 		if (ret != ERROR_SUCCESS || type != REG_SZ)
-			seedpath[0] = '\0';
+			seedpath_local[0] = '\0';
 		RegCloseKey(rkey);
 
-		if (*seedpath && try_random_seed(seedpath, action, &rethandle)) {
+		if (*seedpath_local && try_random_seed(seedpath_local, action, &rethandle)) {
 			return rethandle;
 		}
     }
@@ -1467,16 +1466,16 @@ static HANDLE access_random_seed(int action)
     }
     if (p_SHGetFolderPathA) {
 		if (SUCCEEDED(p_SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA,
-						 NULL, SHGFP_TYPE_CURRENT, seedpath))) {
-			strcat(seedpath, "\\PUTTY.RND");
-			if (try_random_seed(seedpath, action, &rethandle))
+						 NULL, SHGFP_TYPE_CURRENT, seedpath_local))) {
+			strcat(seedpath_local, "\\PUTTY.RND");
+			if (try_random_seed(seedpath_local, action, &rethandle))
 			return rethandle;
 		}
 
 		if (SUCCEEDED(p_SHGetFolderPathA(NULL, CSIDL_APPDATA,
-						 NULL, SHGFP_TYPE_CURRENT, seedpath))) {
-			strcat(seedpath, "\\PUTTY.RND");
-			if (try_random_seed(seedpath, action, &rethandle))
+						 NULL, SHGFP_TYPE_CURRENT, seedpath_local))) {
+			strcat(seedpath_local, "\\PUTTY.RND");
+			if (try_random_seed(seedpath_local, action, &rethandle))
 			return rethandle;
 		}
 	}
@@ -1484,18 +1483,18 @@ static HANDLE access_random_seed(int action)
      * Failing that, try %HOMEDRIVE%%HOMEPATH% as a guess at the
      * user's home directory.
      */
-
+    
 	{	int len, ret;
 
 		len =
-			GetEnvironmentVariable("HOMEDRIVE", seedpath,
-					   sizeof(seedpath));
+			GetEnvironmentVariable("HOMEDRIVE", seedpath_local,
+					   sizeof(seedpath_local));
 		ret =
-			GetEnvironmentVariable("HOMEPATH", seedpath + len,
-					   sizeof(seedpath) - len);
+			GetEnvironmentVariable("HOMEPATH", seedpath_local + len,
+					   sizeof(seedpath_local) - len);
 		if (ret != 0) {
-			strcat(seedpath, "\\PUTTY.RND");
-			if (try_random_seed(seedpath, action, &rethandle))
+			strcat(seedpath_local, "\\PUTTY.RND");
+			if (try_random_seed(seedpath_local, action, &rethandle))
 			return rethandle;
 		}
     }
@@ -1503,9 +1502,9 @@ static HANDLE access_random_seed(int action)
     /*
      * And finally, fall back to C:\WINDOWS.
      */
-    GetWindowsDirectory(seedpath, sizeof(seedpath));
-    strcat(seedpath, "\\PUTTY.RND");
-    if (try_random_seed(seedpath, action, &rethandle))
+    GetWindowsDirectory(seedpath_local, sizeof(seedpath_local));
+    strcat(seedpath_local, "\\PUTTY.RND");
+    if (try_random_seed(seedpath_local, action, &rethandle))
 	return rethandle;
 
     /*
@@ -1573,11 +1572,11 @@ static int transform_jumplist_registry
 	void *psettings_tmp;
 	int new_value_size = 0;
 
-
+	
 	if (*jumplistpath == '\0') {
 		loadPath();
 	}
-
+	
 	hFile = CreateFile(jumplistpath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -1645,7 +1644,7 @@ static int transform_jumplist_registry
     ++piterator_new;
 
 
-
+   
 	hFile = CreateFile(jumplistpath , GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		errorShow("Unable to open file for writing", jumplistpath );
@@ -1669,7 +1668,7 @@ static int transform_jumplist_registry
 	else
 		sfree(new_value);
 
-
+	
     if (ret != ERROR_SUCCESS) {
         return JUMPLISTREG_ERROR_VALUEWRITE_FAILURE;
     } else {

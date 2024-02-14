@@ -340,6 +340,7 @@ saved sessions from
 \IM{remote-controlled printing} ANSI printing
 \IM{remote-controlled printing} remote-controlled printing
 \IM{remote-controlled printing} printing, remote-controlled
+\IM{remote-controlled printing} passthrough printing
 
 \IM{Home and End keys} Home key
 \IM{Home and End keys} End key
@@ -829,9 +830,6 @@ saved sessions from
 \IM{login scripts}{startup scripts} login scripts
 \IM{login scripts}{startup scripts} startup scripts
 
-\IM{WS2_32.DLL} \cw{WS2_32.DLL}
-\IM{WS2_32.DLL} WinSock version 2
-
 \IM{Red Hat Linux} Red Hat Linux
 \IM{Red Hat Linux} Linux, Red Hat
 
@@ -861,6 +859,9 @@ saved sessions from
 
 \IM{SYSTEM32} \cw{SYSTEM32} directory, on Windows
 
+\IM{32-bit Windows} 32-bit Windows
+\IM{32-bit Windows} Windows, 32-bit
+\IM{32-bit Windows} x86 (32-bit processor architecture)
 \IM{64-bit Windows} 64-bit Windows
 \IM{64-bit Windows} Windows, 64-bit
 
