@@ -4,7 +4,7 @@
  */
 
 /*
- * JK: disk config 0.9 from 18. 11. 2015
+ * JK: disk config 0.11 from 20. 3. 2017
  *
  * rewritten for storing information primary to disk
  * reasonable error handling and reporting except for
@@ -35,7 +35,7 @@ static const char hex[16] = "0123456789ABCDEF";
 
 static int tried_shgetfolderpath = FALSE;
 static HMODULE shell32_module = NULL;
-DECL_WINDOWS_FUNCTION(static, HRESULT, SHGetFolderPathA, 
+DECL_WINDOWS_FUNCTION(static, HRESULT, SHGetFolderPathA,
 		      (HWND, int, HANDLE, DWORD, LPSTR));
 
 /* JK: path of settings saved in files */
@@ -72,25 +72,25 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
 		pcHlaska = snewn(strlen(pcErrText) + 31, char);
 	}
 
-	
-	erChyba = GetLastError();		
+
+	erChyba = GetLastError();
 	ltoa(erChyba, pcBuf, 10);
 
-	strcpy(pcHlaska, "Error: ");
+	strcpy(pcHlaska, "错误: ");
 	strcat(pcHlaska, pcErrText);
-	strcat(pcHlaska, "\n");	
+	strcat(pcHlaska, "\n");
 
 	if (pcErrParam) {
 		strcat(pcHlaska, pcErrParam);
 		strcat(pcHlaska, "\n");
 	}
-    strcat(pcHlaska, "Error code: ");
+    strcat(pcHlaska, "错误代码: ");
 	strcat(pcHlaska, pcBuf);
 
     /* JK: get parent-window and show */
     hwRodic = GetActiveWindow();
     if (hwRodic != NULL) { hwRodic = GetLastActivePopup(hwRodic);}
-  
+
 	if (MessageBox(hwRodic, pcHlaska, "错误", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
         /* JK: this is really bad -> just ignore */
         return 0;
@@ -177,7 +177,7 @@ int createPath(char* dir) {
 		}
 		return 1;
 	}
-	
+
 	*p = '\0';
 	createPath(dir);
 	*p = '\\';
@@ -212,12 +212,12 @@ char* joinPath(char* pcDest, char* pcMain, char* pcSuf) {
 	static HMODULE userenv_module = NULL;
 	typedef BOOL (WINAPI *p_ExpandESforUser_t) (HANDLE, LPCTSTR, LPTSTR, DWORD);
 	static p_ExpandESforUser_t p_ExpandESforUser = NULL;
-	
+
 	HMODULE userenv_module = LoadLibrary("USERENV.DLL");
 
 	if (userenv_module) {
 	    p_ExpandESforUser = (p_ExpandESforUser_t) GetProcAddress(shell32_module, "ExpandEnvironmentStringsForUserA");
-		
+
 		if (p_ExpandESforUser) {
 
 			TOKEN_IMPERSONATE
@@ -272,7 +272,7 @@ int loadPath() {
 	/* JK:  save path/curdir */
 	GetCurrentDirectory( (MAX_PATH*2), oldpath);
 
-	
+
 	/* JK: try curdir for putty.conf first */
 	hFile = CreateFile("putty.conf",GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 
@@ -354,7 +354,7 @@ int loadPath() {
 				else if (!strcmp(p, "seedfile")) {
 					p = strchr(p2, '\n');
 					*p = '\0';
-					joinPath(seedpath, puttypath, p2);			
+					joinPath(seedpath, puttypath, p2);
 					p2 = seedpath+strlen(seedpath)-1;
 					while ((*p2 == ' ')||(*p2 == '\n')||(*p2 == '\r')||(*p2 == '\t')) --p2;
 					*(p2+1) = '\0';
@@ -378,7 +378,7 @@ int loadPath() {
 				else if (!strcmp(p, "jumplist")) {
 					p = strchr(p2, '\n');
 					*p = '\0';
-					joinPath(jumplistpath, puttypath, p2);			
+					joinPath(jumplistpath, puttypath, p2);
 					p2 = jumplistpath+strlen(jumplistpath)-1;
 					while ((*p2 == ' ')||(*p2 == '\n')||(*p2 == '\r')||(*p2 == '\t')) --p2;
 					*(p2+1) = '\0';
@@ -386,7 +386,7 @@ int loadPath() {
 				}
 				++p;
 			}
-			
+
 			if (jumplistdefined == 0) { strcpy(jumplistpath, ":"); }
 		}
 		CloseHandle(hFile);
@@ -643,7 +643,7 @@ void *open_settings_r_inner(const char *sessionname)
 			hFile = INVALID_HANDLE_VALUE;
 		}
 		SetCurrentDirectory(oldpath);
-		
+
 		if (hFile == INVALID_HANDLE_VALUE) {
 			sp->fromFile = 0;
 		}
@@ -663,7 +663,7 @@ void *open_settings_r_inner(const char *sessionname)
 			hFile = INVALID_HANDLE_VALUE;
 		}
 		SetCurrentDirectory(oldpath);
-		
+
 		if (hFile == INVALID_HANDLE_VALUE) {
 			/* JK: some error occured -> just report and fail */
 
@@ -672,7 +672,7 @@ void *open_settings_r_inner(const char *sessionname)
 			   So for PSCP/PSFTP/PLINK, do not report error - so report error only for PuTTY
 			   assume only PuTTY project has PUTTY_WIN_RES_H defined
 			*/
-#ifdef PUTTY_WIN_RES_H	
+#ifdef PUTTY_WIN_RES_H
 			errorShow("无法读取文件", p);
 #endif
 			sfree(p);
@@ -693,7 +693,7 @@ void *open_settings_r_inner(const char *sessionname)
 		st1 = snew( struct setItem );
 		sp->fromFile = 1;
 		sp->handle = st1;
-		
+
 		p = fileCont;
 		sp->fileBuf = fileCont; /* JK: remeber for memory freeing */
 
@@ -759,7 +759,7 @@ char *read_setting_s(void *handle, const char *key)
     if (!handle) return NULL;
 
 	if (((struct setPack*) handle)->fromFile) {
-		
+
 		p = snewn(3 * strlen(key) + 1, char);
 		mungestr(key, p);
 
@@ -779,7 +779,7 @@ char *read_setting_s(void *handle, const char *key)
 				}
 				sfree(p);
 				sfree(p2);
-				return buffer;				
+				return buffer;
 			}
 			st = st->next;
 		}
@@ -792,7 +792,7 @@ char *read_setting_s(void *handle, const char *key)
 			return NULL;
 
 		buffer = snewn(size+1, char);
-		if (RegQueryValueEx((HKEY) handle, key, 0, &type, buffer, &size) != ERROR_SUCCESS || type != REG_SZ) {
+		if (RegQueryValueEx((HKEY) handle, key, 0, &type, (BYTE *)buffer, &size) != ERROR_SUCCESS || type != REG_SZ) {
 			sfree(buffer);
 			return NULL;
 		}
@@ -817,7 +817,7 @@ int read_setting_i(void *handle, const char *key, int defvalue)
 		st = ((struct setPack*) handle)->handle;
 		while (st->key) {
 			if ( strcmp(st->key, key) == 0) {
-				return atoi(st->value);				
+				return atoi(st->value);
 			}
 			st = st->next;
 		}
@@ -948,7 +948,7 @@ void del_settings(const char *sessionname)
 
 		p = snewn(3 * strlen(sessionname) + 1, char);
 		mungestr(sessionname, p);
-		
+
 		if (RegOpenKey(HKEY_CURRENT_USER, puttystr, &subkey1) != ERROR_SUCCESS)	return;
 
 		RegDeleteKey(subkey1, p);
@@ -964,7 +964,7 @@ void del_settings(const char *sessionname)
 		strcat(pss, sessionsuffix);
 		p2 = snewn(3 * strlen(p) + 1, char);
 		p2ss = snewn(3 * strlen(pss) + 1, char);
-		
+
 		mungestr(p, p2);
 		strcpy(p, p2);
 		packstr(p, p2);
@@ -1008,7 +1008,7 @@ void *enum_settings_start(void)
 		loadPath();
 	}
 	/* JK: we have path variables */
-	
+
 	/* JK: let's do what this function should normally do */
 	ret = snew(struct enumsettings);
 
@@ -1035,7 +1035,7 @@ char *enum_settings_next(void *handle, char *buffer, int buflen)
 	char *pss;
 
 	if (!handle) return NULL;	/* JK: new in 0.1.3 */
-	
+
 	otherbuf = snewn( (3*buflen)+1, char); /* must be here */
 
 	if (! ((struct enumsettings *)handle)->fromFile ) {
@@ -1149,7 +1149,7 @@ int verify_host_key(const char *hostname, int port,
 	/* JK: settings on disk - every hostkey as file in dir */
 	GetCurrentDirectory( (MAX_PATH*2), oldpath);
 	if (SetCurrentDirectory(sshkpath)) {
-		
+
 		p = snewn(3 * strlen(regname) + 1 + 16, char);
 		packstr(regname, p);
 		strcat(p, keysuffix);
@@ -1186,7 +1186,7 @@ int verify_host_key(const char *hostname, int port,
 	else {
 		/* JK: there are no hostkeys as files -> try registry -> nothing to do here now */
 	}
-	
+
 	/* JK: directory/file not found -> try registry */
 	if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_REG_POS "\\SshHostKeys", &rkey) != ERROR_SUCCESS) {
 		sfree(otherstr);
@@ -1195,7 +1195,7 @@ int verify_host_key(const char *hostname, int port,
 	}
 
     readlen = len;
-    ret = RegQueryValueEx(rkey, regname, NULL, &type, otherstr, &readlen);
+    ret = RegQueryValueEx(rkey, regname, NULL, &type, (BYTE *)otherstr, &readlen);
 
     if (ret != ERROR_SUCCESS && ret != ERROR_MORE_DATA &&
 	!strcmp(keytype, "rsa")) {
@@ -1208,7 +1208,7 @@ int verify_host_key(const char *hostname, int port,
 	char *oldstyle = snewn(len + 10, char);	/* safety margin */
 	readlen = len;
 	ret = RegQueryValueEx(rkey, justhost, NULL, &type,
-			      oldstyle, &readlen);
+			      (BYTE *)oldstyle, &readlen);
 
 	if (ret == ERROR_SUCCESS && type == REG_SZ) {
 	    /*
@@ -1254,7 +1254,7 @@ int verify_host_key(const char *hostname, int port,
 	     * wrong, and hyper-cautiously do nothing.
 	     */
 	    if (!strcmp(otherstr, key))
-		RegSetValueEx(rkey, regname, 0, REG_SZ, otherstr,
+		RegSetValueEx(rkey, regname, 0, REG_SZ, (BYTE *)otherstr,
 			      strlen(otherstr) + 1);
 		sfree(oldstyle);
 		/* JK: session is not saved to file - fixme */
@@ -1292,7 +1292,7 @@ int verify_host_key(const char *hostname, int port,
 			p = snewn(3*strlen(regname) + 1 + 16, char);
 			packstr(regname, p);
 			strcat(p, keysuffix);
-			
+
 			hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
 			if (hFile == INVALID_HANDLE_VALUE) {
@@ -1315,13 +1315,23 @@ int verify_host_key(const char *hostname, int port,
 			}
 		}
 		/* JK: else (Cancel) -> nothing to be done right now */
-				
+
 		RegCloseKey(rkey);
 
 		sfree(otherstr);
 		sfree(regname);
-		return 0;		       
+		return 0;
 	}
+}
+
+int have_ssh_host_key(const char *hostname, int port,
+		      const char *keytype)
+{
+    /*
+     * If we have a host key, verify_host_key will return 0 or 2.
+     * If we don't have one, it'll return 1.
+     */
+    return verify_host_key(hostname, port, keytype, "") != 1;
 }
 
 void store_host_key(const char *hostname, int port,
@@ -1413,7 +1423,7 @@ static HANDLE access_random_seed(int action)
     /*
      * Iterate over a selection of possible random seed paths until
      * we find one that works.
-     * 
+     *
      * We do this iteration separately for reading and writing,
      * meaning that we will automatically migrate random seed files
      * if a better location becomes available (by reading from the
@@ -1428,7 +1438,7 @@ static HANDLE access_random_seed(int action)
     size = sizeof(seedpath);
     if (RegOpenKey(HKEY_CURRENT_USER, PUTTY_REG_POS, &rkey) == ERROR_SUCCESS) {
 		int ret = RegQueryValueEx(rkey, "RandSeedFile",
-					  0, &type, seedpath, &size);
+					  0, &type, (BYTE *)seedpath, &size);
 		if (ret != ERROR_SUCCESS || type != REG_SZ)
 			seedpath[0] = '\0';
 		RegCloseKey(rkey);
@@ -1474,7 +1484,7 @@ static HANDLE access_random_seed(int action)
      * Failing that, try %HOMEDRIVE%%HOMEPATH% as a guess at the
      * user's home directory.
      */
-    
+
 	{	int len, ret;
 
 		len =
@@ -1557,17 +1567,17 @@ static int transform_jumplist_registry
 	DWORD fileSize;
 	HANDLE hFile;
 	DWORD bytesRW;
-    int value_length = 0;
+    DWORD value_length = 0;
     char *old_value, *new_value;
     char *piterator_old, *piterator_new;
 	void *psettings_tmp;
 	int new_value_size = 0;
 
-	
+
 	if (*jumplistpath == '\0') {
 		loadPath();
 	}
-	
+
 	hFile = CreateFile(jumplistpath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
@@ -1635,7 +1645,7 @@ static int transform_jumplist_registry
     ++piterator_new;
 
 
-   
+
 	hFile = CreateFile(jumplistpath , GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
 	if (hFile == INVALID_HANDLE_VALUE) {
 		errorShow("Unable to open file for writing", jumplistpath );
@@ -1659,7 +1669,7 @@ static int transform_jumplist_registry
 	else
 		sfree(new_value);
 
-	
+
     if (ret != ERROR_SUCCESS) {
         return JUMPLISTREG_ERROR_VALUEWRITE_FAILURE;
     } else {
