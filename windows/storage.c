@@ -372,7 +372,7 @@ settings_w *open_settings_w(const char *sessionname, char **errmsg)
     *errmsg = NULL;
 
         if (!sessionname || !*sessionname) {
-                sessionname = "Default Settings";
+                sessionname = "默认设置";
         }
 
         /* JK: if sessionname contains [registry] -> cut it off */
@@ -480,7 +480,7 @@ void close_settings_w(settings_w *handle)
         /* JK: we will write to disk now - open file, filename stored in handle already packed */
         if ((hFile = FindFirstFile(sesspath, &FindFile)) == INVALID_HANDLE_VALUE) {
                 if (!createPath(sesspath)) {
-                        errorShow("Unable to create directory for storing sessions", sesspath);
+                        errorShow("无法创建存储会话的目录", sesspath);
                         return;
                 }
         }
@@ -490,7 +490,7 @@ void close_settings_w(settings_w *handle)
 
         hFile = CreateFile(handle->sp->fileBuf, GENERIC_WRITE,0,NULL,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
         if (hFile == INVALID_HANDLE_VALUE) {
-                errorShow("Unable to open file for writing", handle->sp->fileBuf );
+                errorShow("无法打开用来写入的文件", handle->sp->fileBuf );
                 return;
         }
 
@@ -517,7 +517,7 @@ void close_settings_w(settings_w *handle)
                 sfree(p);
 
                 if (!writeok) {
-                        errorShow("Unable to save settings", st1->key);
+                        errorShow("无法保存设置", st1->key);
                         return;
                         /* JK: memory should be freed here - fixme */
                 }
@@ -549,7 +549,7 @@ settings_r *open_settings_r(const char *sessionname)
         {
                 ses = snewn(strlen(sessionname)+16, char);
                 strcpy(ses, sessionname);
-                strcat(ses, " [registry]");
+                strcat(ses, " [注册表]");
                 p = open_settings_r_inner(ses);
         }
         if (p == NULL)
@@ -575,7 +575,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
         sp = snew( struct setPack );
 
         if (!sessionname || !*sessionname) {
-                sessionname = "Default Settings";
+                sessionname = "默认设置";
         }
 
         /* JK: in the first call of this function we initialize path variables */
@@ -618,7 +618,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
 
         /* JK: default settings must be read from registry */
         /* 8.1.2007 - 0.1.6 try to load them from file if exists - nasty code duplication */
-        if (!strcmp(sessionname, "Default Settings")) {
+        if (!strcmp(sessionname, "默认设置")) {
                 GetCurrentDirectory( (MAX_PATH*2), oldpath);
                 if (SetCurrentDirectory(sesspath)) {
                         hFile = CreateFile(p, GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,NULL);
@@ -659,7 +659,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
                            assume only PuTTY project has PUTTY_WIN_RES_H defined
                         */
 #ifdef PUTTY_WIN_RES_H
-                        errorShow("Unable to load file for reading", p);
+                        errorShow("无法从文件读取会话", p);
 #endif
                         sfree(p);
                         return NULL;
@@ -670,7 +670,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
                 fileCont = snewn(fileSize+16, char);
 
                 if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL)) {
-                        errorShow("Unable to read session from file", p);
+                        errorShow("无法从文件读取会话", p);
                         sfree(p);
                         return NULL;
                 }
@@ -955,7 +955,7 @@ void del_settings(const char *sessionname)
                         {
                                 if (!DeleteFile(p2))
                                 {
-                                        errorShow("Unable to delete settings.", NULL);
+                                        errorShow("无法删除设置。", NULL);
                                 }
                         }
                         SetCurrentDirectory(oldpath);
@@ -1019,7 +1019,7 @@ bool enum_settings_next(settings_e *handle, strbuf *sb)
                         unescape_registry_key(name, sb);
                         sfree(name);
                         handle->i++;
-                        put_fmt(sb, " [registry]");
+                        put_fmt(sb, " [注册表]");
                         return true;        
                 }
         
@@ -1331,11 +1331,11 @@ void store_host_key(const char *hostname, int port,
         hFile = CreateFile(p, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
 
         if (hFile == INVALID_HANDLE_VALUE) {
-                errorShow("Unable to create file", p);
+                errorShow("无法创建文件", p);
         }
         else {
                 if (!WriteFile(hFile, key, strlen(key), &bytesWritten, NULL)) {
-                        errorShow("Unable to save key to file", NULL);
+                        errorShow("无法保存值到文件", NULL);
                 }
                 CloseHandle(hFile);
         }
@@ -1345,6 +1345,8 @@ void store_host_key(const char *hostname, int port,
         strbuf_free(regname);
 }
 
+
+/* JK: new stuff that should be probably saved in files instead of registry */
 
 /* JK: new stuff that should be probably saved in files instead of registry */
 struct host_ca_enum {
@@ -1707,7 +1709,7 @@ static int transform_jumplist_registry
                 if (jumplistpath[0] != ':'){
                         hFile = CreateFile(jumplistpath,GENERIC_READ,FILE_SHARE_READ,NULL,OPEN_ALWAYS,FILE_ATTRIBUTE_NORMAL,NULL);
                         if (hFile == INVALID_HANDLE_VALUE) {
-                                errorShow("Unable to create jumplist file", jumplistpath);
+                                errorShow("无法创建 jumplist 文件", jumplistpath);
                                 return JUMPLISTREG_ERROR_KEYOPENCREATE_FAILURE;
                         }
                 } else {
