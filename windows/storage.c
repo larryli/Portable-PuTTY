@@ -4,7 +4,7 @@
  */
 
  /*
-  * JK: disk config 0.21 from 29. 10. 2023
+  * JK: disk config 0.23 from 2. 6. 2024
   *
   * rewritten for storing information primary to disk
   * reasonable error handling and reporting except for
@@ -1345,8 +1345,6 @@ void store_host_key(const char *hostname, int port,
         strbuf_free(regname);
 }
 
-
-/* JK: new stuff that should be probably saved in files instead of registry */
 
 /* JK: new stuff that should be probably saved in files instead of registry */
 struct host_ca_enum {
