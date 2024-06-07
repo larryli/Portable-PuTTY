@@ -120,7 +120,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
     hwRParent = GetActiveWindow();
     if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent); }
 
-    if (MessageBox(hwRParent, pcMessage, "Error", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION) == 0) {
+    if (MessageBox(hwRParent, pcMessage, "错误", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION) == 0) {
         /* JK: this is really bad -> just ignore */
         return 0;
     }
