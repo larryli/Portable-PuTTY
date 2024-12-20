@@ -372,7 +372,7 @@ settings_w *open_settings_w(const char *sessionname, char **errmsg)
     *errmsg = NULL;
 
         if (!sessionname || !*sessionname) {
-                sessionname = "Default Settings";
+                sessionname = "默认设置";
         }
 
         /* JK: if sessionname contains [registry] -> cut it off */
@@ -549,7 +549,7 @@ settings_r *open_settings_r(const char *sessionname)
         {
                 ses = snewn(strlen(sessionname)+16, char);
                 strcpy(ses, sessionname);
-                strcat(ses, " [registry]");
+                strcat(ses, " [注册表]");
                 p = open_settings_r_inner(ses);
         }
         if (p == NULL)
@@ -575,7 +575,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
         sp = snew( struct setPack );
 
         if (!sessionname || !*sessionname) {
-                sessionname = "Default Settings";
+                sessionname = "默认设置";
         }
 
         /* JK: in the first call of this function we initialize path variables */
