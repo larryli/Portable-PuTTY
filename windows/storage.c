@@ -4,7 +4,7 @@
  */
 
  /*
-  * JK: disk config 0.23 from 2. 6. 2024
+  * JK: disk config 0.24 from 8. 12. 2024
   *
   * rewritten for storing information primary to disk
   * reasonable error handling and reporting except for
@@ -394,9 +394,9 @@ settings_w *open_settings_w(const char *sessionname, char **errmsg)
         strcat(sp->fileBuf, sessionsuffix);
         strbuf_free(sb);
 
-        settings_w *toret = snew(settings_w);
-    toret->sp = sp;
-    return toret;
+        settings_w *handle = snew(settings_w);
+    handle->sp = sp;
+    return handle;
 }
 
 void write_setting_s(settings_w *handle, const char *key, const char *value)
@@ -555,9 +555,9 @@ settings_r *open_settings_r(const char *sessionname)
         if (p == NULL)
                 return NULL;
 
-        settings_r* toret = snew(settings_r);
-        toret->sp = p;
-        return toret;
+        settings_r* handle = snew(settings_r);
+        handle->sp = p;
+        return handle;
 }
 
 settings_r *open_settings_r_inner(const char *sessionname)
@@ -659,7 +659,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
                            assume only PuTTY project has PUTTY_WIN_RES_H defined
                         */
 #ifdef PUTTY_WIN_RES_H
-                        errorShow("无法从文件读取会话", p);
+                        errorShow("无法载入文件", p);
 #endif
                         sfree(p);
                         return NULL;
@@ -670,7 +670,7 @@ settings_r *open_settings_r_inner(const char *sessionname)
                 fileCont = snewn(fileSize+16, char);
 
                 if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL)) {
-                        errorShow("无法从文件读取会话", p);
+                        errorShow("无法从文件中读取会话", p);
                         sfree(p);
                         return NULL;
                 }
@@ -877,7 +877,23 @@ Filename *read_setting_filename(settings_r *handle, const char *name)
 
 void write_setting_filename(settings_w *handle, const char *name, Filename *result)
 {
-    write_setting_s(handle, name, result->path);
+    /*
+     * When saving a session involving a Filename, we use the 'cpath'
+     * member of the Filename structure, because otherwise we break
+     * backwards compatibility with existing saved sessions.
+     *
+     * This means that 'exotic' filenames - those including Unicode
+     * characters outside the host system's CP_ACP default code page -
+     * cannot be represented faithfully, and saving and reloading a
+     * Conf including one will break it.
+     *
+     * This can't be fixed without breaking backwards compatibility,
+     * and if we're going to break compatibility then we should break
+     * it good and hard (the Nanny Ogg principle), and devise a
+     * completely fresh storage representation that fixes as many
+     * other legacy problems as possible at the same time.
+     */
+    write_setting_s(handle, name, result->cpath); /* FIXME */
 }
 
 void close_settings_r(settings_r *handle)
@@ -977,7 +993,7 @@ struct settings_e {
 
 settings_e *enum_settings_start(void)
 {
-    struct settings_e *ret;
+    struct settings_e *e;
 
         /* JK: in the first call of this function we can initialize path variables */
         if (*sesspath == '\0') {
@@ -986,7 +1002,7 @@ settings_e *enum_settings_start(void)
         /* JK: we have path variables */
 
         /* JK: let's do what this function should normally do */
-        ret = snew(struct settings_e);
+        e = snew(struct settings_e);
 
         HKEY key = open_regkey_ro(HKEY_CURRENT_USER, puttystr);
         if (!key) {
@@ -995,12 +1011,12 @@ settings_e *enum_settings_start(void)
                  * will solve this by starting scanning dir sesspath
                 */
         }
-        ret->key = key;
-        ret->fromFile = 0;
-        ret->hFile = NULL;
-        ret->i = 0;
+        e->key = key;
+        e->fromFile = 0;
+        e->hFile = NULL;
+        e->i = 0;
 
-    return ret;
+    return e;
 }
 
 bool enum_settings_next(settings_e *handle, strbuf *sb)
@@ -1305,7 +1321,7 @@ bool have_ssh_host_key(const char *hostname, int port,
     return check_stored_host_key(hostname, port, keytype, "") != 1;
 }
 
-void store_host_key(const char *hostname, int port,
+void store_host_key(Seat *seat, const char *hostname, int port,
                     const char *keytype, const char *key)
 {
         strbuf  *regname;
@@ -1335,7 +1351,7 @@ void store_host_key(const char *hostname, int port,
         }
         else {
                 if (!WriteFile(hFile, key, strlen(key), &bytesWritten, NULL)) {
-                        errorShow("无法保存值到文件", NULL);
+                        errorShow("无法保存密钥到文件", NULL);
                 }
                 CloseHandle(hFile);
         }
@@ -1436,13 +1452,13 @@ host_ca *host_ca_load(const char *name)
 char *host_ca_save(host_ca *hca)
 {
     if (!*hca->name)
-        return dupstr("CA record must have a name");
+        return dupstr("CA 记录必须有一个名称");
 
     strbuf *sb = strbuf_new();
     escape_registry_key(hca->name, sb);
     HKEY rkey = create_regkey(HKEY_CURRENT_USER, host_ca_key, sb->s);
     if (!rkey) {
-        char *err = dupprintf("Unable to create registry key\n"
+        char *err = dupprintf("无法创建注册表主键\n"
                               "HKEY_CURRENT_USER\\%s\\%s", host_ca_key, sb->s);
         strbuf_free(sb);
         return err;
