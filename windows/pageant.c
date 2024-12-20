@@ -105,7 +105,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
     errorCode = GetLastError();
     ltoa(errorCode, pcBuf, 10);
 
-    strcpy(pcMessage, "Error: ");
+    strcpy(pcMessage, "错误: ");
     strcat(pcMessage, pcErrText);
     strcat(pcMessage, "\n");
 
@@ -113,7 +113,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
         strcat(pcMessage, pcErrParam);
         strcat(pcMessage, "\n");
     }
-    strcat(pcMessage, "Error code: ");
+    strcat(pcMessage, "错误代码: ");
     strcat(pcMessage, pcBuf);
 
     /* JK: get parent-window and show */
@@ -1032,7 +1032,7 @@ static void update_sessions(void)
         fileCont = snewn(fileSize + 16, char);
 
         if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL)) {
-            errorShow("Unable to read configuration file, falling back to defaults", NULL);
+            errorShow("无法读取配置文件，回滚到默认设置", NULL);
 
             /* JK: default values are already there - just clean-up */
         }
@@ -1063,7 +1063,7 @@ static void update_sessions(void)
                     /* at first ExpandEnvironmentStrings */
                     if (0 == ExpandEnvironmentStrings(p2, pcBuf, MAX_PATH)) {
                         /* JK: failure -> revert back - but it ussualy won't work, so report error to user! */
-                        errorShow("Unable to ExpandEnvironmentStrings for session path", p2);
+                        errorShow("无法从会话路径中展开环境字符串", p2);
                         strncpy(pcBuf, p2, strlen(p2));
                     }
 
@@ -1203,7 +1203,7 @@ static void update_sessions(void)
             mii.fState = MFS_ENABLED;
             mii.wID = (index_menu * 16) + IDM_SESSIONS_BASE;
             /* JK: add [registry] mark */
-            put_fmt(sb, " [registry]");
+            put_fmt(sb, " [注册表]");
             mii.dwTypeData = sb->s;
             InsertMenuItem(session_menu, index_menu, true, &mii);
             index_menu++;
