@@ -2564,7 +2564,6 @@ static void usage(void)
     printf("  -logoverwrite\n");
     printf("  -logappend\n");
     printf("            记录文件已存在时覆盖文件还是在文件末尾添加内容\n");
-    cleanup_exit(1);
 }
 
 static void version(void)

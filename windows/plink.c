@@ -187,7 +187,6 @@ static void usage(void)
     printf("            记录文件已存在时覆盖文件还是在文件末尾添加内容\n");
     printf("  -shareexists\n");
     printf("            测试是否存在上游连接共享\n");
-    exit(1);
 }
 
 static void version(void)
