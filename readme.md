@@ -2,7 +2,7 @@
 
 PuTTY 是自由的跨平台 Telnet/SSH 客户端，同时在 Win32 和 Unix 系统下模拟 xterm 终端。其主要作者是 Simon Tatham。
 
-当前版本为 0.82 测试版，并采用 [jakub@kotrla.net](https://jakub.kotrla.net/putty/) 0.24.0 补丁。如果发现原版与补丁都已更新，[请及时通知](https://github.com/larryli/Portable-PuTTY/issues/new)。
+当前版本为 0.83 测试版，并采用 [jakub@kotrla.net](https://jakub.kotrla.net/putty/) 0.25 补丁。如果发现原版与补丁都已更新，[请及时通知](https://github.com/larryli/Portable-PuTTY/issues/new)。
 
 
 ## MIT 许可证
