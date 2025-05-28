@@ -273,7 +273,7 @@ int loadPath() {
 
                 if (!ReadFile(hFile, fileCont, fileSize, &bytesRead, NULL))
                 {
-                        errorShow("Unable to read configuration file, falling back to defaults", NULL);
+                        errorShow("无法读取配置文件，回滚到默认", NULL);
                         /* JK: default values are already there and clean-up at end */
                 }
                 else {
@@ -971,7 +971,7 @@ void del_settings(const char *sessionname)
                         {
                                 if (!DeleteFile(p2))
                                 {
-                                        errorShow("Unable to delete settings.", NULL);
+                                        errorShow("无法删除设置", NULL);
                                 }
                         }
                         SetCurrentDirectory(oldpath);
