@@ -89,7 +89,7 @@ DWORD errorShow(const char* pcErrText, const char* pcErrParam) {
         hwRParent = GetActiveWindow();
         if (hwRParent != NULL) { hwRParent = GetLastActivePopup(hwRParent);}
 
-        if (MessageBox(hwRParent, pcMessage, "Error", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
+        if (MessageBox(hwRParent, pcMessage, "错误", MB_OK|MB_APPLMODAL|MB_ICONEXCLAMATION) == 0) {
                 /* JK: this is really bad -> just ignore */
                 return 0;
         }
@@ -160,7 +160,7 @@ char* joinPath(char* pcDest, char* pcMain, char* pcSuf) {
         /* at first ExpandEnvironmentStrings */
         if (0 == ExpandEnvironmentStrings(pcSuf, pcBuf, MAX_PATH)) {
                 /* JK: failure -> revert back - but it usually won't work, so report error to user! */
-                errorShow("Unable to ExpandEnvironmentStrings for session path", pcSuf);
+                errorShow("无法从会话路径中展开环境字符串", pcSuf);
                 strncpy(pcBuf, pcSuf, strlen(pcSuf));
         }
         /* now ExpandEnvironmentStringsForUser - only on win2000Pro and above */

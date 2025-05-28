@@ -1575,7 +1575,6 @@ static LRESULT CALLBACK TrayWndProc(HWND hwnd, UINT message,
                 strcat(cmdline, "&R");
 
             /* JK: execute putty.exe with working directory same as is for pageant.exe */
-            /* JK: execute putty.exe with working directory same as is for pageant.exe */
             if ((INT_PTR)ShellExecute(hwnd, NULL, putty_path, cmdline,
                                     putty_path, SW_SHOW) <= 32) {
                 MessageBox(NULL, "无法执行 PuTTY！",
@@ -1651,7 +1650,6 @@ static LRESULT CALLBACK TrayWndProc(HWND hwnd, UINT message,
                     strcat(param, "&R");
                 strcat(param, "@");
                 strcat(param, mii.dwTypeData);
-                 /* JK: execute putty.exe with working directory same as is for pageant.exe */
                  /* JK: execute putty.exe with working directory same as is for pageant.exe */
                 if ((INT_PTR)ShellExecute(hwnd, NULL, putty_path, param,
                                          puttypath, SW_SHOW) <= 32) {
